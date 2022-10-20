@@ -13,10 +13,19 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 # Ignore warnings
 import warnings
+
+# Ignore private
+import os,sys
+import re
+
 warnings.filterwarnings('ignore')
 
 train = pd.read_csv("Train_data.csv")
 test = pd.read_csv("Test_data.csv")
+
+
+f = open('output.txt','w')
+sys.stdout = f
 
 print(train.head(4))
 
@@ -42,9 +51,9 @@ train['class'].value_counts()
 
 train[train['class'] == 'anomaly']
 
-# plt.figure(figsize = (6,5))
-# sns.countplot(train['class'], color = "orange")
-# plt.show()
+plt.figure(figsize = (6,5))
+sns.displot(train['class'], color = "orange") # bug fix реализация как в статье не может оббработать тип строки
+plt.show()
 
 train.hist(figsize=(30,30))
 plt.show()
@@ -181,8 +190,10 @@ print()
 print ("OK \n")
 
 from sklearn.metrics import confusion_matrix
-# cnn_predictions = classifier.predict_classes(X_test)
-cnn_predictions = np.argmax(classifier.predict(X_test), axis=-1)
+# cnn_predictions = classifier.predict_classes(X_test)                  # реализация, которая написана в статье (устаревшая)
+# cnn_predictions = np.argmax(classifier.predict(X_test), axis=1)       # fix_1 из статьи
+cnn_predictions = (classifier.predict(X_test) > 0.5).astype("int32")    # fix_2 из статьи (подходящий)
+
 confusion_matrix = confusion_matrix(Y_test, cnn_predictions)
 sns.heatmap(confusion_matrix, annot=True, fmt="d", cbar = False)
 plt.title("CNN Confusion Matrix")
